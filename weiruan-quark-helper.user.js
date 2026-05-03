@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         威软夸克助手
-// @namespace    Weiruan-Quark-Helper
+// @name         夸克直链下载
+// @namespace    quark-dl
 // @version      1.0.9
 // @description  夸克网盘增强下载助手。支持批量下载、直链导出、aria2/IDM/cURL、下载历史、文件过滤、深色模式、快捷键操作。
-// @author       威软科技
+// @author       wangzy
 // @license      MIT
 // @icon         https://pan.quark.cn/favicon.ico
 // @match        *://pan.quark.cn/*
@@ -15,7 +15,9 @@
 // @grant        unsafeWindow
 // @run-at       document-end
 // @connect      drive.quark.cn
-// @homepage     https://github.com/weiruankeji2025/weiruan-quark
+// @homepage     https://github.com/tonywang1201/quark-dl
+// @updateURL    https://raw.githubusercontent.com/tonywang1201/quark-dl/main/weiruan-quark-helper.user.js
+// @downloadURL  https://raw.githubusercontent.com/tonywang1201/quark-dl/main/weiruan-quark-helper.user.js
 // ==/UserScript==
 
 (function() {
@@ -45,7 +47,7 @@
     // ==================== 国际化 ====================
     const i18n = {
         zh: {
-            title: '威软夸克助手',
+            title: '夸克直链下载',
             downloadHelper: '下载助手',
             processing: '处理中...',
             success: '解析成功',
@@ -110,7 +112,7 @@
             includeFolders: '包含文件夹'
         },
         en: {
-            title: 'Weiruan Quark Helper',
+            title: 'Quark DL',
             downloadHelper: 'Download Helper',
             processing: 'Processing...',
             success: 'Parse Success',
@@ -224,7 +226,7 @@
     const Utils = {
         log: (...args) => {
             if (CONFIG.DEBUG) {
-                console.log('[威软夸克助手]', ...args);
+                console.log('[夸克直链下载]', ...args);
             }
         },
 
@@ -269,7 +271,7 @@
                 }
             }
 
-            console.log('[威软夸克助手] 分享参数:', { pwdId, stoken: stoken ? '已获取' : '未获取' });
+            console.log('[夸克直链下载] 分享参数:', { pwdId, stoken: stoken ? '已获取' : '未获取' });
             return { pwdId, stoken };
         },
 
@@ -1007,13 +1009,13 @@
 
             try {
                 let files = App.getSelectedFiles();
-                console.log('[威软夸克助手] 找到的原始文件:', files);
-                console.log('[威软夸克助手] 文件详情:', files.map(f => ({name: f.name, isDir: f.isDir, fid: f.fid})));
+                console.log('[夸克直链下载] 找到的原始文件:', files);
+                console.log('[夸克直链下载] 文件详情:', files.map(f => ({name: f.name, isDir: f.isDir, fid: f.fid})));
 
                 // 分离文件和文件夹
                 const folders = files.filter(f => f.isDir);
                 let regularFiles = files.filter(f => !f.isDir);
-                console.log(`[威软夸克助手] 文件: ${regularFiles.length}, 文件夹: ${folders.length}`);
+                console.log(`[夸克直链下载] 文件: ${regularFiles.length}, 文件夹: ${folders.length}`);
 
                 // 如果有文件夹，展开获取所有文件
                 if (folders.length > 0) {
@@ -1050,7 +1052,7 @@
                         Utils.toast(L.folderTooMany, 'info');
                     }
 
-                    console.log(`[威软夸克助手] 展开文件夹后共 ${regularFiles.length} 个文件`);
+                    console.log(`[夸克直链下载] 展开文件夹后共 ${regularFiles.length} 个文件`);
                 }
 
                 files = regularFiles;
@@ -1078,24 +1080,24 @@
 
                 let res;
                 const isShare = Utils.isSharePage();
-                console.log('[威软夸克助手] 页面类型:', isShare ? '分享页面' : '个人网盘');
-                console.log('[威软夸克助手] 准备请求API, fids:', files.map(f => f.fid));
+                console.log('[夸克直链下载] 页面类型:', isShare ? '分享页面' : '个人网盘');
+                console.log('[夸克直链下载] 准备请求API, fids:', files.map(f => f.fid));
 
                 if (isShare) {
                     // 分享页面处理
                     const { pwdId, stoken } = Utils.getShareParams();
-                    console.log('[威软夸克助手] 分享信息:', { pwdId, hasStoken: !!stoken });
+                    console.log('[夸克直链下载] 分享信息:', { pwdId, hasStoken: !!stoken });
 
                     // 方法1: 先尝试标准下载API（如果用户已登录可能直接可用）
-                    console.log('[威软夸克助手] 尝试标准API...');
+                    console.log('[夸克直链下载] 尝试标准API...');
                     res = await Utils.post(CONFIG.API, { fids: files.map(f => f.fid) });
-                    console.log('[威软夸克助手] 标准API返回:', res);
+                    console.log('[夸克直链下载] 标准API返回:', res);
 
                     // 方法2: 如果标准API失败，检查文件是否已有下载链接
                     if (!res || res.code !== 0 || !res.data || res.data.length === 0) {
-                        console.log('[威软夸克助手] 标准API未返回数据，检查文件自带的下载链接...');
+                        console.log('[夸克直链下载] 标准API未返回数据，检查文件自带的下载链接...');
                         const filesWithUrl = files.filter(f => f.download_url);
-                        console.log('[威软夸克助手] 已有下载链接的文件数:', filesWithUrl.length);
+                        console.log('[夸克直链下载] 已有下载链接的文件数:', filesWithUrl.length);
 
                         if (filesWithUrl.length > 0) {
                             res = {
@@ -1118,7 +1120,7 @@
                 } else {
                     // 个人网盘处理
                     res = await Utils.post(CONFIG.API, { fids: files.map(f => f.fid) });
-                    console.log('[威软夸克助手] API返回:', res);
+                    console.log('[夸克直链下载] API返回:', res);
                 }
 
                 if (res && res.code === 0 && res.data && res.data.length > 0) {
@@ -1147,7 +1149,7 @@
                     Utils.toast(`${L.parseError}: ${res?.message || '未获取到下载链接'}`, 'error');
                 }
             } catch(e) {
-                console.error('[威软夸克助手]', e);
+                console.error('[夸克直链下载]', e);
                 Utils.toast(L.networkError, 'error');
             } finally {
                 if (btn) {
@@ -2100,7 +2102,7 @@
                     if (CONFIG.DEBUG) {
                         // 输出详细的页面分析
                         console.log('==========================================');
-                        console.log('[威软夸克助手] 调试信息 v' + CONFIG.VERSION);
+                        console.log('[夸克直链下载] 调试信息 v' + CONFIG.VERSION);
                         console.log('==========================================');
                         console.log('页面类型:', Utils.isSharePage() ? '分享页面' : '个人网盘');
                         console.log('URL:', location.href);
@@ -2267,7 +2269,7 @@
 
                 <div class="weiruan-footer">
                     ${L.title} v${CONFIG.VERSION} ·
-                    <a href="https://github.com/weiruankeji2025/weiruan-quark" target="_blank">GitHub</a>
+                    <a href="https://github.com/tonywang1201/quark-dl" target="_blank">GitHub</a>
                 </div>
             </div>`;
 
@@ -2655,7 +2657,7 @@
     // ==================== 初始化 ====================
     setTimeout(() => {
         App.init();
-        console.log(`[威软夸克助手] v${CONFIG.VERSION} 已加载`);
+        console.log(`[夸克直链下载] v${CONFIG.VERSION} 已加载`);
 
         // 监听URL变化（SPA应用）
         let lastUrl = location.href;
